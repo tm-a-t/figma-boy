@@ -1,2 +1,5 @@
 rootProject.name = "figma-boy"
-include("idea-plugin")
+include(
+    "idea-plugin",
+    "imgdiff",
+)
