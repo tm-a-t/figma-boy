@@ -2,6 +2,7 @@ package me.tmat.figmaboy.mcp
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.logger
+import io.ktor.server.cio.CIO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import io.ktor.server.engine.*
@@ -35,7 +36,7 @@ class McpServerService(
         port = usePort()
         val localHost = "127.0.0.1"
 
-        val server = embeddedServer(Netty, host = localHost, port = port) {
+        val server = embeddedServer(CIO, host = localHost, port = port) {
             module(object : ILogger {
                 override fun info(message: String) = println(message)
                 override fun warn(message: String) = println(message)

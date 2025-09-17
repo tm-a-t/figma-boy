@@ -28,6 +28,9 @@ dependencies {
 
     implementation(project(":mcp"))
 
+    val ktorVersion = "3.3.0"
+    implementation("io.ktor:ktor-server-cio:${ktorVersion}")
+
     configurations.configureEach {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
