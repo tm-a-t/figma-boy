@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Figma Boy Bridge</title>
+    <style>
+      body { font: 12px/1.4 -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; margin: 0; padding: 10px; }
+      .status { margin-bottom: 8px; }
+      .log { height: 150px; overflow: auto; background: #f8f8f8; border: 1px solid #ddd; padding: 6px; }
+      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: #aaa; }
+      .dot.on { background: #2ecc71; }
+      .dot.off { background: #e74c3c; }
+      code { background: #eee; padding: 0 3px; }
+    </style>
+  </head>
+  <body>
+    <div class="status">
+      <span id="ws-dot" class="dot off"></span>
+      <span id="ws-text">Disconnected</span>
+    </div>
+    <div class="log" id="log"></div>
+
+    <script>
+      const logEl = document.getElementById('log');
+      const dot = document.getElementById('ws-dot');
+      const txt = document.getElementById('ws-text');
+
+      function log(msg) {
+        const time = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.textContent = `[${time}] ${msg}`;
+        logEl.appendChild(line);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      let ws = null;
+      let helloInfo = { fileKey: null, pluginVersion: null, capabilities: [] };
+      let reconnectDelay = 500;
+      const MAX_DELAY = 8000;
+
+      function setConnected(on) {
+        dot.classList.toggle('on', !!on);
+        dot.classList.toggle('off', !on);
+        txt.textContent = on ? 'Connected' : 'Disconnected';
+      }
+
+      function sendHello() {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const hello = {
+          type: 'hello',
+          fileKey: helloInfo.fileKey,
+          pluginVersion: helloInfo.pluginVersion,
+          capabilities: helloInfo.capabilities || []
+        };
+        ws.send(JSON.stringify(hello));
+        log('Sent hello');
+      }
+
+      function connect() {
+        try {
+          ws = new WebSocket('ws://localhost:4114/plugin');
+        } catch (e) {
+          log('WebSocket create failed: ' + e);
+          scheduleReconnect();
+          return;
+        }
+
+        ws.onopen = () => {
+          setConnected(true);
+          log('WebSocket opened');
+          reconnectDelay = 500;
+          sendHello();
+        };
+        ws.onclose = (ev) => {
+          setConnected(false);
+          log('WebSocket closed: ' + (ev.reason || ev.code));
+          scheduleReconnect();
+        };
+        ws.onerror = (ev) => {
+          log('WebSocket error');
+        };
+        ws.onmessage = (ev) => {
+          let data = null;
+          try { data = JSON.parse(ev.data); } catch {}
+          if (!data || typeof data !== 'object') return;
+
+          if (data.type === 'command') {
+            // forward to code.ts
+            parent.postMessage({ pluginMessage: data }, '*');
+            log('Command: ' + data.name);
+          } else {
+            log('Unknown message from server: ' + ev.data);
+          }
+        };
+      }
+
+      function scheduleReconnect() {
+        if (reconnectDelay < MAX_DELAY) reconnectDelay *= 2;
+        setTimeout(connect, reconnectDelay);
+      }
+
+      // Receive messages from code.ts
+      window.onmessage = (event) => {
+        const msg = event.data && event.data.pluginMessage;
+        if (!msg) return;
+
+        if (msg.type === 'init') {
+          helloInfo = {
+            fileKey: msg.fileKey || null,
+            pluginVersion: msg.pluginVersion || null,
+            capabilities: msg.capabilities || []
+          };
+          log('Init received');
+          if (ws && ws.readyState === WebSocket.OPEN) sendHello();
+          return;
+        }
+
+        if (msg.type === 'response') {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(msg));
+            log('Response sent: ' + (msg.ok ? 'ok' : 'error'));
+          } else {
+            log('Dropped response (socket not open)');
+          }
+          return;
+        }
+      };
+
+      connect();
+    </script>
+  </body>
+</html>

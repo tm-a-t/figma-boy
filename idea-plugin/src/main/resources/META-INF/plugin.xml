@@ -5,16 +5,14 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>Figma-boy-plugin</name>
+    <name>Figma Boy</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor url="https://figmaboy.tmat.me">Figma Boy</vendor>
 
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager. -->
     <description><![CDATA[
-        Enter short description for your plugin here.<br>
-        <em>most HTML tags may be used</em>
+        Figma Figma Boy Figma Boy Figma Boy. Figma Figma Boy Figma Boy Figma Boy.
     ]]></description>
 
     <!-- Product and plugin compatibility requirements.
@@ -24,6 +22,14 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
+        <applicationService serviceImplementation="me.tmat.figmaboyplugin.mcp.McpServerService"/>
+        <backgroundPostStartupActivity implementation="me.tmat.figmaboyplugin.mcp.McpServerStarter"/>
     </extensions>
+
+    <actions>
+        <action id="FigmaBoy.Meow"
+                class="me.tmat.figmaboyplugin.mcp.McpDebugAction"
+                text="Meow"
+                description="Meow"/>
+    </actions>
 </idea-plugin>

@@ -1,0 +1,23 @@
+{
+  "name": "Figma Boy",
+  "id": "figma-boy-intellij",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "capabilities": [],
+  "enableProposedApi": true,
+  "enablePrivatePluginApi": true,
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "figma",
+    "figjam",
+    "slides"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "http://localhost:4114",
+      "ws://localhost:4114"
+    ],
+    "reasoning": "Connects to an MCP server by the IntelliJ plugin"
+  }
+}
