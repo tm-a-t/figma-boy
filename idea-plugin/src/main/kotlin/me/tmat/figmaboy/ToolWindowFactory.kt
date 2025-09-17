@@ -1,6 +1,5 @@
 package me.tmat.figmaboy
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
@@ -10,11 +9,14 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
-import com.intellij.ui.JBColor
 import com.intellij.openapi.actionSystem.*
 import com.intellij.util.ui.JBUI
-import javax.swing.JPanel
 import java.awt.BorderLayout
+import java.awt.FlowLayout
+import javax.swing.JButton
+import javax.swing.JPanel
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBTextField
 
 class MyToolWindowFactory : ToolWindowFactory, DumbAware {
 
@@ -24,7 +26,7 @@ class MyToolWindowFactory : ToolWindowFactory, DumbAware {
         if (!JBCefApp.isSupported()) {
             // Fallback if JCEF isn’t available on this machine
             panel.setContent(JPanel(BorderLayout()).apply {
-                add(com.intellij.ui.components.JBLabel("JCEF is not supported on this system."), BorderLayout.CENTER)
+                add(JBLabel("JCEF is not supported on this system."), BorderLayout.CENTER)
                 border = JBUI.Borders.empty(12)
             })
             addContent(toolWindow, panel)
@@ -61,22 +63,38 @@ class MyToolWindowFactory : ToolWindowFactory, DumbAware {
                 BackAction(browser), ForwardAction(browser), ReloadAction(browser)
             ), true).apply { targetComponent = panel }
 
-        panel.toolbar = toolbar.component
+        // Build top control strip with toolbar + our custom controls
+        val topPanel = JPanel(FlowLayout(FlowLayout.LEFT, 8, 3))
+        topPanel.add(toolbar.component)
+
+        val idField = JBTextField().apply {
+            columns = 10
+            isEditable = false
+            toolTipText = "7 digits from node-id (e.g. 4932359)"
+        }
+        val btn = JButton("Show item id").apply {
+            toolTipText = "Extract 7 digits after node-id from the current Figma URL"
+            addActionListener {
+                val url = browser.cefBrowser.url ?: ""
+                val regex = Regex("node-id=(\\d+)-(\\d+)")
+                val match = regex.find(url)
+                val value = if (match != null) {
+                    val digits = match.groupValues[1] + match.groupValues[2]
+                    // Keep only digits and prefer 7-digit result if possible
+                    val onlyDigits = digits.filter { it.isDigit() }
+                    if (onlyDigits.length >= 7) onlyDigits.take(7) else onlyDigits
+                } else ""
+                idField.text = value
+            }
+        }
+
+        topPanel.add(btn)
+        topPanel.add(JBLabel(":"))
+        topPanel.add(idField)
+
+        panel.toolbar = topPanel
         panel.setContent(browser.component)
 
-        // Optional: JS ↔ IDE bridge (send strings from page to plugin)
-        val jsQuery = com.intellij.ui.jcef.JBCefJSQuery.create(browser)
-        jsQuery.addHandler { msgFromPage ->
-            // TODO handle message (e.g., parse JSON, run IDE actions)
-            null // returned string goes back to JS (or null)
-        }
-        browser.cefBrowser.executeJavaScript(
-            """
-            // Expose a function on the page that sends messages to the IDE:
-            window.ideBridge = (s) => { ${jsQuery.inject("s")} };
-            """.trimIndent(),
-            browser.cefBrowser.url, 0
-        )
 
         addContent(toolWindow, panel)
     }
