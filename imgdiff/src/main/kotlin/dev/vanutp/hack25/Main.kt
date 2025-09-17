@@ -43,13 +43,21 @@ fun elementToString(driver: RemoteWebDriver, element: WebElement): String {
 
 fun resizeWindow(driver: RemoteWebDriver, width: Int, height: Int) {
     val isWayland = System.getenv("XDG_SESSION_TYPE") == "wayland"
+    val isMacos = System.getProperty("os.name").lowercase().contains("mac", ignoreCase = true)
     val scale = if (isWayland) {
         1.25f // костыль
+    } else if (isMacos) {
+        2.0f // костыль
     } else {
         1f
     }
+    val width = if (isWayland) {
+        ((width + 40) / scale).toInt()
+    } else {
+        (width / scale).toInt()
+    }
     driver.manage().window().size = Dimension(
-        ((width + 40) / scale).toInt(),
+        width,
         ((height + 300) / scale).toInt(),
     )
 }
