@@ -36,7 +36,11 @@ class McpServerService(
         val localHost = "127.0.0.1"
 
         val server = embeddedServer(Netty, host = localHost, port = port) {
-            mcpModule(log)
+            mcpModule(object : ILogger {
+                override fun info(message: String) = log.info(message)
+                override fun warn(message: String) = log.warn(message)
+                override fun error(message: String) = log.error(message)
+            })
         }
 
         server.start(wait = false)

@@ -3,3 +3,5 @@ include(
     "idea-plugin",
     "imgdiff",
 )
+
+include("mcp")

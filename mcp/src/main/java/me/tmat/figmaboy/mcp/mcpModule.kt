@@ -1,6 +1,5 @@
 package me.tmat.figmaboy.mcp
 
-import com.intellij.openapi.diagnostic.Logger
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -20,7 +19,7 @@ private val json = Json {
     encodeDefaults = true
 }
 
-fun Application.mcpModule(log: Logger) {
+fun Application.mcpModule(log: ILogger) {
     val hub = PluginHub()
 
     install(CallLogging) {  }
