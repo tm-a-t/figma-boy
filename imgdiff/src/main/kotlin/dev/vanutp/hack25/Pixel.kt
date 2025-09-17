@@ -48,11 +48,11 @@ fun pixelDiff(img1: Mat, img2: Mat): PixelDiffResult {
 
     // 5.1) Keep a pixel as different only if at least 6 of its 8 neighbors are also different
     // Compute 3x3 sum (center + 8 neighbors) over the binary mask, then require sum >= 7*255
-    val kernel = Mat(3, 3, CV_32F, Scalar(1.0))
+    val kernel = Mat(5, 5, CV_32F, Scalar(1.0))
     val sum3x3 = Mat()
     filter2D(discreteMask, sum3x3, CV_32F, kernel)
     val neighbor7 = Mat()
-    threshold(sum3x3, neighbor7, 7.0 * 255.0 - 1e-3, 255.0, THRESH_BINARY)
+    threshold(sum3x3, neighbor7, 25.0 * 255.0 - 1e-3, 255.0, THRESH_BINARY)
     val neighbor7u8 = Mat()
     neighbor7.convertTo(neighbor7u8, CV_8U)
     val filteredMask = Mat()
