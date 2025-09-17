@@ -14,6 +14,7 @@ import kotlinx.serialization.json.*
 import kotlinx.serialization.json.jsonPrimitive
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
+import java.io.File
 import kotlin.io.encoding.Base64
 
 /** --- JSON Schema helpers (супер-короткие) --- */
@@ -503,6 +504,9 @@ val kekotool = RegisteredTool(
     try {
         val referencePath = request.arguments["referencePath"]?.jsonPrimitive?.content
             ?: return@RegisteredTool CallToolResult(listOf(TextContent("Missing 'referencePath' argument")), isError = true)
+        if (!File(referencePath).exists()) {
+            return@RegisteredTool CallToolResult(listOf(TextContent("Reference file does not exist: $referencePath")), isError = true)
+        }
         val url = request.arguments["url"]?.jsonPrimitive?.content
             ?: return@RegisteredTool CallToolResult(listOf(TextContent("Missing 'url' argument")), isError = true)
         val (imageBytes, diffPercentage) = compare(driver, referencePath, url)
