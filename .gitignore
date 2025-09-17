@@ -6,3 +6,6 @@ build/
 *.iml
 .direnv/
 bin/
+
+figma-plugin/node_modules/
+figma-plugin/**.js
