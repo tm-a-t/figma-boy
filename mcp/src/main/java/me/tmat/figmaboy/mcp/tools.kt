@@ -1,12 +1,20 @@
 package me.tmat.figmaboy.mcp
 
+import dev.vanutp.hack25.compare
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.ImageContent
+import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
+import io.modelcontextprotocol.kotlin.sdk.TextContent
 import io.modelcontextprotocol.kotlin.sdk.Tool
 import io.modelcontextprotocol.kotlin.sdk.server.RegisteredTool
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.*
+import kotlinx.serialization.json.jsonPrimitive
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.ChromeOptions
+import kotlin.io.encoding.Base64
 
 /** --- JSON Schema helpers (супер-короткие) --- */
 private fun jStr() = buildJsonObject { put("type", JsonPrimitive("string")) }
@@ -31,7 +39,7 @@ private val rgbaSchema = jObj(buildJsonObject {
 })
 
 /** --- Описание MCP tools --- */
-private val tools = listOf(
+private val figmaTools = listOf(
     Tool(
         name = "get_document_info",
         title = "Get Document Info",
@@ -464,10 +472,57 @@ private val tools = listOf(
     )
 )
 
-fun registerTools(hub: PluginHub) =
-    tools.map { tool ->
-        RegisteredTool(tool) { request ->
+val kekotool = RegisteredTool(
+    Tool(
+        name = "compare_screenshot_to_web_page",
+        title = "Compare Screenshot to Web Page",
+        description = "Compare a reference screenshot to a live web page and highlight differences",
+        inputSchema = Tool.Input(
+            buildJsonObject {
+                put("referencePath", buildJsonObject {
+                    put("type", JsonPrimitive("string"))
+                    put("description", JsonPrimitive("Path to the reference screenshot image file"))
+                })
+                put("url", buildJsonObject {
+                    put("type", JsonPrimitive("string"))
+                    put("description", JsonPrimitive("URL of the web page to capture and compare"))
+                })
+            }
+        ),
+        outputSchema = Tool.Output(),
+        annotations = null,
+    )
+) { request ->
+    val chromeBinaryPath = System.getenv("CHROME_BINARY")
+    val chromeOptions = ChromeOptions()
+//    chromeOptions.addArguments("--headless")
+    if (chromeBinaryPath != null) {
+        chromeOptions.setBinary(chromeBinaryPath)
+    }
+    val driver = ChromeDriver(chromeOptions)
+    try {
+        val referencePath = request.arguments["referencePath"]?.jsonPrimitive?.content
+            ?: return@RegisteredTool CallToolResult(listOf(TextContent("Missing 'referencePath' argument")), isError = true)
+        val url = request.arguments["url"]?.jsonPrimitive?.content
+            ?: return@RegisteredTool CallToolResult(listOf(TextContent("Missing 'url' argument")), isError = true)
+        val (imageBytes, diffPercentage) = compare(driver, referencePath, url)
+        CallToolResult(
+            listOf(
+                ImageContent(
+                    data = Base64.encode(imageBytes),
+                    mimeType = "image/png",
+                ),
+                TextContent("Difference: %.2f%%".format(diffPercentage))
+            ),
+        )
+    } finally {
+        driver.quit()
+    }
+}
 
+fun registerTools(hub: PluginHub) =
+    figmaTools.map { tool ->
+        RegisteredTool(tool) { request ->
             assert(hub.isConnected())
 
             val figmaPluginResponse = hub.callToolThroughPlugin(tool.name, request.arguments)
@@ -485,4 +540,4 @@ fun registerTools(hub: PluginHub) =
                 )
             }
         }
-    }
+    } + listOf(kekotool)
