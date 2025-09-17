@@ -29,27 +29,28 @@ fun Application.module(log: ILogger) {
 //    install(SSE)
     install(WebSockets)
 
+    mcp {
+        Server(
+            serverInfo = Implementation(
+                name = "figma-boy",
+                version = "1.0.0"
+            ),
+            options = ServerOptions(
+                capabilities = ServerCapabilities(
+                    prompts = ServerCapabilities.Prompts(listChanged = true),
+                    resources = ServerCapabilities.Resources(subscribe = true, listChanged = true),
+                    tools = ServerCapabilities.Tools(listChanged = true),
+                )
+            )
+        ).apply {
+            addTools(registerTools(hub))
+        }
+    }
+
     routing {
 
         get("/") {
             call.respondText("MCP server running")
-        }
-
-        mcp {
-            Server(
-                serverInfo = Implementation(
-                    name = "figma-boy",
-                    version = "1.0.0"
-                ),
-                options = ServerOptions(
-                    capabilities = ServerCapabilities(
-                        prompts = ServerCapabilities.Prompts(listChanged = null),
-                        resources = ServerCapabilities.Resources(subscribe = null, listChanged = null)
-                    )
-                )
-            ).apply {
-                addTools(registerTools(hub))
-            }
         }
 
         // --- Figma Plugin WebSocket: connects here and receives commands

@@ -1,5 +1,7 @@
 plugins {
     kotlin("jvm") version "2.2.0"
+    kotlin("plugin.serialization") version "2.2.0"
+    application
 }
 
 group = "me.tmat.figmaboy"
@@ -13,19 +15,20 @@ val ktorVersion = "3.3.0"
 
 dependencies {
     // Ktor server dependencies
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging-jvm:${ktorVersion}")
-    implementation("io.ktor:ktor-server-sse-jvm:${ktorVersion}")
-    implementation("io.ktor:ktor-server-websockets-jvm:${ktorVersion}")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-cio:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-logging:${ktorVersion}")
+    implementation("io.ktor:ktor-server-sse:${ktorVersion}")
+    implementation("io.ktor:ktor-server-websockets:${ktorVersion}")
 
     // Explicit kotlinx.serialization runtime to match Kotlin serialization compiler plugin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
 
-    implementation("io.modelcontextprotocol:kotlin-sdk:0.7.0")
+    // Use the server-focused MCP Kotlin SDK artifact (matches working sample)
+    implementation("io.modelcontextprotocol:kotlin-sdk-server:0.7.0")
 
     testImplementation(kotlin("test"))
 }
@@ -36,4 +39,9 @@ tasks.test {
 
 kotlin {
     jvmToolchain(17)
+}
+
+application {
+    // Kotlin generates a class named MainKt for top-level main in me.tmat.figmaboy.mcp.Main.kt
+    mainClass.set("me.tmat.figmaboy.mcp.MainKt")
 }
