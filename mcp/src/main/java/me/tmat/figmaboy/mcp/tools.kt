@@ -16,6 +16,7 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import java.io.File
 import kotlin.io.encoding.Base64
+import kotlin.io.path.createTempFile
 
 /** --- JSON Schema helpers (супер-короткие) --- */
 private fun jStr() = buildJsonObject { put("type", JsonPrimitive("string")) }
@@ -490,7 +491,18 @@ val kekotool = RegisteredTool(
                 })
             }
         ),
-        outputSchema = Tool.Output(),
+        outputSchema = Tool.Output(
+            buildJsonObject {
+                put("diffImagePath", buildJsonObject {
+                    put("type", JsonPrimitive("string"))
+                    put("description", JsonPrimitive("Path to the output diff image highlighting differences"))
+                })
+                put("diffPercentage", buildJsonObject {
+                    put("type", JsonPrimitive("number"))
+                    put("description", JsonPrimitive("Percentage of differing pixels between reference and screenshot"))
+                })
+            }
+        ),
         annotations = null,
     )
 ) { request ->
@@ -510,14 +522,20 @@ val kekotool = RegisteredTool(
         val url = request.arguments["url"]?.jsonPrimitive?.content
             ?: return@RegisteredTool CallToolResult(listOf(TextContent("Missing 'url' argument")), isError = true)
         val (imageBytes, diffPercentage) = compare(driver, referencePath, url)
+        val outputImagePath = createTempFile("diff-", ".png").toAbsolutePath().toString()
+        File(outputImagePath).writeBytes(imageBytes)
         CallToolResult(
             listOf(
+                TextContent("Difference: %.2f%%\nImage location: %s".format(diffPercentage, outputImagePath)),
                 ImageContent(
-                    data = Base64.encode(imageBytes),
-                    mimeType = "image/png",
-                ),
-                TextContent("Difference: %.2f%%".format(diffPercentage))
+                    Base64.encode(imageBytes),
+                    "image/png",
+                )
             ),
+            buildJsonObject {
+                put("diffImagePath", JsonPrimitive(outputImagePath))
+                put("diffPercentage", JsonPrimitive(diffPercentage))
+            }
         )
     } finally {
         driver.quit()
