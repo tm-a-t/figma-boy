@@ -126,7 +126,87 @@
         }
       };
 
+      const pending = new Map();
+      const makeId = () => 'ui-' + Math.random().toString(36).slice(2);
+
+      function sendCommandLocal(name, args = {}) {
+        const requestId = makeId();
+        pending.set(requestId, { name, ts: Date.now() });
+        // ШЛЁМ КОМАНДУ НАПРЯМУЮ В ПЛАГИН (без WebSocket)
+        parent.postMessage({ pluginMessage: { type: 'command', requestId, name, args } }, '*');
+        log('UI→Plugin command: ' + name);
+      }
+
+      // Привяжем кнопки
+      window.addEventListener('DOMContentLoaded', () => {
+        const btnGetSel = document.getElementById('btn-get-sel');
+        const btnReplace = document.getElementById('btn-replace-text');
+        const nodeIdEl = document.getElementById('node-id');
+        const newTextEl = document.getElementById('new-text');
+
+        if (btnGetSel) {
+          btnGetSel.onclick = () => sendCommandLocal('get_selection', {});
+        }
+        if (btnReplace) {
+          btnReplace.onclick = () => {
+            const nodeId = nodeIdEl && nodeIdEl.value.trim();
+            const text = newTextEl && newTextEl.value;
+            if (!nodeId) {
+              log('Введите Node ID (подсмотрите его через Get selection)');
+              return;
+            }
+            sendCommandLocal('replace_text', { nodeId, text });
+          };
+        }
+      });
+
       connect();
+
+      const _prevOnMessage = window.onmessage;
+      window.onmessage = (event) => {
+        const msg = event.data && event.data.pluginMessage;
+        if (!msg) return;
+
+        if (msg.type === 'init') {
+          // оставляем твой существующий код init без изменений
+        }
+
+        if (msg.type === 'response') {
+          // 1) Показать результат в логе, если это наш локальный запрос
+          if (msg.requestId && pending.has(msg.requestId)) {
+            const req = pending.get(msg.requestId);
+            pending.delete(msg.requestId);
+            if (msg.ok) {
+              log(`Result (${req.name}): ` + JSON.stringify(msg.result));
+            } else {
+              log(`ERROR (${req.name}): ` + JSON.stringify(msg.error));
+            }
+          }
+          // 2) ПРИ ЭТОМ сохранить твой текущий пайплайн: если WS открыт — форвардим на сервер
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(msg));
+            log('Response sent to server: ' + (msg.ok ? 'ok' : 'error'));
+          }
+          return;
+        }
+
+        // упасть назад на твой старый обработчик, если он есть
+        if (typeof _prevOnMessage === 'function') {
+          _prevOnMessage(event);
+        }
+      };
     </script>
+    <div class="controls">
+      <div class="row">
+        <button id="btn-get-sel">Get selection</button>
+      </div>
+      <div class="row">
+        <input id="node-id" placeholder="Node ID (TEXT)" />
+      </div>
+      <div class="row">
+        <input id="new-text" placeholder="New text" />
+        <button id="btn-replace-text">Replace text</button>
+      </div>
+    </div>
   </body>
 </html>
