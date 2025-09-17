@@ -6,7 +6,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -36,7 +35,7 @@ class PluginHub {
             throw IllegalStateException("Plugin is not connected")
         }
 
-        val payload = Json.encodeToString(FigmaPluginCommand(requestId = reqId, name = name, args = args))
+        val payload = json.encodeToString(FigmaPluginCommand(requestId = reqId, name = name, args = args))
         s.send(Frame.Text(payload))
 
         return try {

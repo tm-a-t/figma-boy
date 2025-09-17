@@ -15,12 +15,6 @@ import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
 import kotlinx.serialization.json.*
 
-private val json = Json {
-    ignoreUnknownKeys = true
-    prettyPrint = true
-    encodeDefaults = true
-}
-
 fun Application.module(log: ILogger) {
     val hub = PluginHub()
 

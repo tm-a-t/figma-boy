@@ -1,9 +1,16 @@
 package me.tmat.figmaboy.mcp
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+
+val json = Json {
+    ignoreUnknownKeys = true
+    prettyPrint = true
+    encodeDefaults = true
+}
 
 @Serializable
 sealed interface FigmaPluginMessage {
