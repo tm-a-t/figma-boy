@@ -22,8 +22,19 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="me.tmat.figmaboyplugin.mcp.McpServerService"/>
-        <backgroundPostStartupActivity implementation="me.tmat.figmaboyplugin.mcp.McpServerStarter"/>
+        <applicationService serviceImplementation="me.tmat.figmaboy.mcp.McpServerService"/>
+        <backgroundPostStartupActivity implementation="me.tmat.figmaboy.mcp.McpServerStarter"/>
+        <applicationService
+                serviceImplementation="me.tmat.figmaboy.JcefPerformanceService"
+                preload="true"/>
+        <toolWindow
+                id="Figma Boy"
+                anchor="left"
+                icon="me.tmat.figmaboy.MyIcons.MyToolWindow"
+                secondary="false"
+                factoryClass="me.tmat.figmaboy.MyToolWindowFactory"
+                canCloseContents="true"
+        />
     </extensions>
 
     <actions>
