@@ -6,12 +6,10 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.ktor.server.websocket.*
-import io.ktor.sse.ServerSentEvent
 import io.ktor.websocket.*
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.serialization.json.*
@@ -25,21 +23,16 @@ private val json = Json {
 fun Application.mcpModule(log: Logger) {
     val hub = PluginHub()
 
-//    install(CallLogging) {  }
+    install(CallLogging) {  }
     install(ContentNegotiation) { json() }
     install(SSE)
     install(WebSockets)
 
     routing {
-        
+
         get("/") {
             call.respondText("MCP server running")
         }
-
-        // A simple single-client SSE bridge for MCP responses
-        // The POST /mcp endpoint accepts JSON-RPC requests from the client
-        // The SSE /mcp endpoint streams JSON-RPC responses back to the client
-        val mcpOutbound = kotlinx.coroutines.channels.Channel<String>(capacity = kotlinx.coroutines.channels.Channel.BUFFERED)
 
         // --- Figma Plugin WebSocket: connects here and receives commands
         webSocket("/plugin") {
@@ -79,38 +72,39 @@ fun Application.mcpModule(log: Logger) {
             }
         }
 
-        // --- MCP Client SSE + POST: agent/LLM connects via SSE and sends requests via POST
-        sse("/mcp") {
-            println("MCP client connected via SSE")
-            try {
-                for (msg in mcpOutbound) {
-                    send(ServerSentEvent(data = msg))
+        // --- MCP Client WebSocket: agent/LLM connects here
+        webSocket("/mcp") {
+            log.info("MCP client connected")
+
+            suspend fun sendRpc(resp: JsonRpcResponse) {
+                send(Frame.Text(json.encodeToString(resp)))
+            }
+
+            for (frame in incoming) {
+                if (frame !is Frame.Text) continue
+                val text = frame.readText()
+
+                val req = runCatching { json.decodeFromString<JsonRpcRequest>(text) }.getOrElse {
+                    sendRpc(
+                        JsonRpcResponse(
+                            id = null,
+                            error = JsonRpcError(-32700, "Parse error", JsonPrimitive(it.message ?: ""))
+                        )
+                    )
+                    continue
                 }
-            } finally {
-                println("MCP SSE client disconnected")
-            }
-        }
 
-        post("/mcp") {
-            val text = call.receiveText()
-            val req = runCatching { json.decodeFromString<JsonRpcRequest>(text) }.getOrNull()
-            val resp = if (req == null) {
-                JsonRpcResponse(
-                    id = null,
-                    error = JsonRpcError(-32700, "Parse error")
-                )
-            } else {
-                answerRequest(req, hub)
-            }
-            val encoded = json.encodeToString(resp)
-            mcpOutbound.trySend(encoded)
-            call.respondText("ok")
-        }
+                sendRpc(answerRequest(req, hub))
 
-        // Health check
-        get("/healthz") {
-            val ok = hub.isConnected()
-            call.respondText(if (ok) "ok (plugin connected)" else "ok (plugin NOT connected)")
+                log.info("MCP client disconnected")
+            }
+
+            // Health check
+            get("/healthz") {
+                val ok = hub.isConnected()
+                call.respondText(if (ok) "ok (plugin connected)" else "ok (plugin NOT connected)")
+            }
+
         }
     }
 }
