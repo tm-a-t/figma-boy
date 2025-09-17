@@ -30,6 +30,8 @@ dependencies {
     // Use the server-focused MCP Kotlin SDK artifact (matches working sample)
     implementation("io.modelcontextprotocol:kotlin-sdk-server:0.7.0")
 
+    implementation(project(":imgdiff"))
+
     testImplementation(kotlin("test"))
 }
 

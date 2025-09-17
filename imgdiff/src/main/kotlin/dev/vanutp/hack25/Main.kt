@@ -1,6 +1,7 @@
 package dev.vanutp.hack25
 
 import org.bytedeco.opencv.global.opencv_imgcodecs.IMREAD_GRAYSCALE
+import org.bytedeco.opencv.global.opencv_imgcodecs.imencode
 import org.bytedeco.opencv.global.opencv_imgcodecs.imread
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.OutputType
@@ -9,6 +10,7 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.RemoteWebDriver
 import kotlin.io.path.Path
+import org.bytedeco.javacpp.BytePointer
 
 fun isIgnored(ignoreElements: Map<String, String>, element: WebElement): Boolean {
     for ((key, ignVal) in ignoreElements) {
@@ -52,14 +54,14 @@ fun resizeWindow(driver: RemoteWebDriver, width: Int, height: Int) {
     )
 }
 
-fun compare(driver: RemoteWebDriver, referencePath: String, url: String, ignoreElements: Map<String, String>): List<Pair<String, KRect>> {
+fun compare(driver: RemoteWebDriver, referencePath: String, url: String): Pair<ByteArray, Double> {
     val referenceImg = imread(referencePath, IMREAD_GRAYSCALE)
     resizeWindow(driver, referenceImg.cols(), referenceImg.rows())
 
     driver.get(url)
     Thread.sleep(2000)
     val screenshotBytes = driver.getScreenshotAs(OutputType.BYTES)
-    Path("tests/screenshot.png").toFile().writeBytes(screenshotBytes)
+//    Path("tests/screenshot.png").toFile().writeBytes(screenshotBytes)
 
     val screenshotImg = imload(screenshotBytes, IMREAD_GRAYSCALE)
 
@@ -68,52 +70,62 @@ fun compare(driver: RemoteWebDriver, referencePath: String, url: String, ignoreE
     }
 
     val diffResult = pixelDiff(referenceImg, screenshotImg)
-    showPixelDiffResult(diffResult)
-    val ignoreAreas = mutableListOf<KRect>()
-    val diffElements = mutableListOf<Pair<String, KRect>>()
-    diffResult.diffPixels.forEach { p ->
+    val img = renderPixelDiffResult(diffResult).second
 
+    // Encode to PNG using a BytePointer buffer
+    val buf = BytePointer()
+    imencode(".png", img, buf)
+    val imgBytes = ByteArray(buf.limit().toInt()).also { buf.get(it) }
 
-        if (
-            (ignoreAreas + diffElements.map { it.second })
-                .any { it.x <= p.x && p.x <= it.x + it.width && it.y <= p.y && p.y <= it.y + it.height }
-        ) {
-            return@forEach
-        }
+    val diffPercentage = 100.0 * diffResult.diffPixels.size / (img.cols() * img.rows())
 
-        val elementsRaw = driver.executeScript(
-            """
-                    let el = document.elementFromPoint(arguments[0], arguments[1]);
-                    const res = [];
-                    while (el) {
-                        res.push(el);
-                        el = el.parentElement;
-                    }
-                    return res;
-                """.trimIndent(),
-            p.x,
-            p.y
-        ) as List<*>
-        val elements = elementsRaw.map { it as WebElement }
-        if (elements.isEmpty()) {
-            println("No element found at (${p.x}, ${p.y})")
-            return@forEach
-        }
+    return imgBytes to diffPercentage
 
-        val ignoredElement = elements.firstOrNull { isIgnored(ignoreElements, it) }
-        if (ignoredElement != null) {
-            val r = ignoredElement.rect
-            ignoreAreas.add(r.toKRect())
-            println("Ignoring element ${ignoredElement.tagName} at ${r.toKRect()}")
-            return@forEach
-        }
+//    val ignoreAreas = mutableListOf<KRect>()
+//    val diffElements = mutableListOf<Pair<String, KRect>>()
+//    diffResult.diffPixels.forEach { p ->
+//
+//
+//        if (
+//            (ignoreAreas + diffElements.map { it.second })
+//                .any { it.x <= p.x && p.x <= it.x + it.width && it.y <= p.y && p.y <= it.y + it.height }
+//        ) {
+//            return@forEach
+//        }
+//
+//        val elementsRaw = driver.executeScript(
+//            """
+//                    let el = document.elementFromPoint(arguments[0], arguments[1]);
+//                    const res = [];
+//                    while (el) {
+//                        res.push(el);
+//                        el = el.parentElement;
+//                    }
+//                    return res;
+//                """.trimIndent(),
+//            p.x,
+//            p.y
+//        ) as List<*>
+//        val elements = elementsRaw.map { it as WebElement }
+//        if (elements.isEmpty()) {
+//            println("No element found at (${p.x}, ${p.y})")
+//            return@forEach
+//        }
+//
+//        val ignoredElement = elements.firstOrNull { isIgnored(ignoreElements, it) }
+//        if (ignoredElement != null) {
+//            val r = ignoredElement.rect
+//            ignoreAreas.add(r.toKRect())
+//            println("Ignoring element ${ignoredElement.tagName} at ${r.toKRect()}")
+//            return@forEach
+//        }
+//
+//        val element = elementToString(driver, elements.first())
+//        val rect = elements.first().rect.toKRect()
+//        diffElements.add(element to rect)
+//    }
 
-        val element = elementToString(driver, elements.first())
-        val rect = elements.first().rect.toKRect()
-        diffElements.add(element to rect)
-    }
-
-    return diffElements
+//    return diffElements
 }
 
 fun main(args: Array<String>) {
@@ -126,7 +138,7 @@ fun main(args: Array<String>) {
     }
     val driver = ChromeDriver(chromeOptions)
     try {
-        println(compare(driver, imgPath1, "https://my.progtime.net", mapOf("class" to "IaFooter-module-scss-module__U0iMhG__version")))
+        println(compare(driver, imgPath1, "https://my.progtime.net"))
     } finally {
         driver.quit()
     }

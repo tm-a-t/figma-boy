@@ -1,12 +1,8 @@
 package dev.vanutp.hack25
 
-import org.bytedeco.javacv.CanvasFrame
-import org.bytedeco.javacv.OpenCVFrameConverter
 import org.bytedeco.opencv.global.opencv_core.*
-import org.bytedeco.opencv.global.opencv_imgcodecs.imwrite
 import org.bytedeco.opencv.global.opencv_imgproc.*
 import org.bytedeco.opencv.opencv_core.*
-import javax.swing.WindowConstants
 
 data class PixelDiffResult(
     val diffPixels: List<KPoint2d>,
@@ -75,7 +71,7 @@ fun pixelDiff(img1: Mat, img2: Mat): PixelDiffResult {
     return PixelDiffResult(out, filteredMask, c1, c2)
 }
 
-fun showPixelDiffResult(result: PixelDiffResult) {
+fun renderPixelDiffResult(result: PixelDiffResult): Pair<Mat, Mat> {
     // Convert canvases to color for highlighting
     val c1c = Mat()
     val c2c = Mat()
@@ -95,22 +91,24 @@ fun showPixelDiffResult(result: PixelDiffResult) {
     addWeighted(c1c, 1.0, red1, 0.5, 0.0, out1)
     addWeighted(c2c, 1.0, red2, 0.5, 0.0, out2)
 
+    return Pair(out1, out2)
+
     // Combine side-by-side
-    val combined = Mat()
-    val mv = MatVector(2L)
-    mv.put(0L, out1)
-    mv.put(1L, out2)
-    hconcat(mv, combined)
+//    val combined = Mat()
+//    val mv = MatVector(2L)
+//    mv.put(0L, out1)
+//    mv.put(1L, out2)
+//    hconcat(mv, combined)
 
-    val outputPath = "pixel_diff.png"
-    imwrite(outputPath, combined)
-    println("Wrote result to $outputPath")
+//    val outputPath = "pixel_diff.png"
+//    imwrite(outputPath, combined)
+//    println("Wrote result to $outputPath")
 
-    val converter = OpenCVFrameConverter.ToMat()
-    val frame = CanvasFrame("Pixel Diff", 1.0)
-    frame.defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
-    frame.showImage(converter.convert(combined))
-    while (frame.isVisible) {
-        Thread.sleep(50)
-    }
+//    val converter = OpenCVFrameConverter.ToMat()
+//    val frame = CanvasFrame("Pixel Diff", 1.0)
+//    frame.defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
+//    frame.showImage(converter.convert(combined))
+//    while (frame.isVisible) {
+//        Thread.sleep(50)
+//    }
 }
