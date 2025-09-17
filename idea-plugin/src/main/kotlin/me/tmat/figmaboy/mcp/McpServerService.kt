@@ -36,22 +36,22 @@ class McpServerService(
         val localHost = "127.0.0.1"
 
         val server = embeddedServer(Netty, host = localHost, port = port) {
-            mcpModule(object : ILogger {
-                override fun info(message: String) = log.info(message)
-                override fun warn(message: String) = log.warn(message)
-                override fun error(message: String) = log.error(message)
+            module(object : ILogger {
+                override fun info(message: String) = println(message)
+                override fun warn(message: String) = println(message)
+                override fun error(message: String) = println(message)
             })
         }
 
         server.start(wait = false)
         engine = server.engine
-        log.info("MCP server started on http://$localHost:$port")
+        println("MCP server started on http://$localHost:$port")
     }
 
     override fun dispose() {
         // Called on dynamic plugin unload/IDE shutdown
         engine?.stop(gracePeriodMillis = 1000, timeoutMillis = 5000)
         engine = null
-        log.info("MCP server stopped")
+        println("MCP server stopped")
     }
 }

@@ -27,6 +27,10 @@ dependencies {
     }
 
     implementation(project(":mcp"))
+
+    configurations.configureEach {
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    }
 }
 
 intellijPlatform {
