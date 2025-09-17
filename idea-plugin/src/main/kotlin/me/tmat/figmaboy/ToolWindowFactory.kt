@@ -68,23 +68,24 @@ class MyToolWindowFactory : ToolWindowFactory, DumbAware {
         topPanel.add(toolbar.component)
 
         val idField = JBTextField().apply {
-            columns = 10
+            columns = 16
             isEditable = false
-            toolTipText = "7 digits from node-id (e.g. 4932359)"
+            toolTipText = "Value of node-id parameter (text after node-id= and before &)."
         }
-        val btn = JButton("Show item id").apply {
-            toolTipText = "Extract 7 digits after node-id from the current Figma URL"
+        val btn = JButton("Select").apply {
+            toolTipText = "Show the value after node-id= and before & from the current Figma URL"
             addActionListener {
                 val url = browser.cefBrowser.url ?: ""
-                val regex = Regex("node-id=(\\d+)-(\\d+)")
-                val match = regex.find(url)
-                val value = if (match != null) {
-                    val digits = match.groupValues[1] + match.groupValues[2]
-                    // Keep only digits and prefer 7-digit result if possible
-                    val onlyDigits = digits.filter { it.isDigit() }
-                    if (onlyDigits.length >= 7) onlyDigits.take(7) else onlyDigits
-                } else ""
+                val match = Regex("node-id=([^&]+)").find(url)
+                val value = match?.groupValues?.getOrNull(1) ?: ""
                 idField.text = value
+                if (value.isNotEmpty()) {
+                    val base = project.basePath ?: System.getProperty("user.dir")
+                    val dir = java.nio.file.Paths.get(base, "project_settings")
+                    java.nio.file.Files.createDirectories(dir)
+                    val file = dir.resolve("nodeId.txt")
+                    java.nio.file.Files.write(file, value.toByteArray(Charsets.UTF_8))
+                }
             }
         }
 
