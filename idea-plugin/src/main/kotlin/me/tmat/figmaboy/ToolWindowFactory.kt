@@ -31,6 +31,26 @@ class MyToolWindowFactory : ToolWindowFactory, DumbAware {
             return
         }
 
+        // Try to apply performance switches before JCEF initializes (best-effort)
+        try {
+            val cacheDir = com.intellij.openapi.application.PathManager.getSystemPath() + "/jcef-cache"
+            val switches = listOf(
+                "--enable-gpu",
+                "--ignore-gpu-blocklist",
+                "--enable-zero-copy",
+                "--enable-gpu-rasterization",
+                "--enable-oop-rasterization",
+                "--enable-native-gpu-memory-buffers",
+                "--disable-background-timer-throttling",
+                "--disable-renderer-backgrounding",
+                "--enable-features=VaapiVideoDecoder,CanvasOopRasterization,WebRTC-H264WithOpenH264FFmpeg",
+                "--disk-cache-dir=$cacheDir"
+            )
+            addChromiumSwitchesCompatLocal(switches)
+        } catch (_: Throwable) {
+            // ignore
+        }
+
         // Create the embedded Chromium browser
         val browser = JBCefBrowser("https://www.figma.com")  // or your app/URL
         Disposer.register(toolWindow.disposable, browser)   // dispose with tool window
@@ -64,6 +84,35 @@ class MyToolWindowFactory : ToolWindowFactory, DumbAware {
     private fun addContent(toolWindow: ToolWindow, panel: SimpleToolWindowPanel) {
         val content = ContentFactory.getInstance().createContent(panel, "", false)
         toolWindow.contentManager.addContent(content)
+    }
+}
+
+private fun addChromiumSwitchesCompatLocal(flags: List<String>) {
+    val cls = JBCefApp::class.java
+    try {
+        val m = cls.getMethod("addCommandLineSwitches", Array<String>::class.java)
+        m.invoke(null, flags.toTypedArray())
+        return
+    } catch (_: Throwable) {
+    }
+    var singleArg: java.lang.reflect.Method? = null
+    try { singleArg = cls.getMethod("addCommandLineSwitch", String::class.java) } catch (_: Throwable) {}
+    var twoArg: java.lang.reflect.Method? = null
+    try { twoArg = cls.getMethod("addCommandLineSwitch", String::class.java, String::class.java) } catch (_: Throwable) {}
+    for (flag in flags) {
+        val trimmed = flag.trim().removePrefix("--").removePrefix("-")
+        val eq = trimmed.indexOf('=')
+        if (eq > 0 && twoArg != null) {
+            val name = trimmed.substring(0, eq)
+            val value = trimmed.substring(eq + 1)
+            try { twoArg.invoke(null, name, value) } catch (_: Throwable) {}
+            continue
+        }
+        if (singleArg != null) {
+            try { singleArg.invoke(null, flag) } catch (_: Throwable) {}
+        } else if (twoArg != null) {
+            try { twoArg.invoke(null, trimmed, "") } catch (_: Throwable) {}
+        }
     }
 }
 

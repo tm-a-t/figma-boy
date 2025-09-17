@@ -21,14 +21,16 @@
     <vendor url="https://plugins.jetbrains.com">IntelliJ Platform SDK</vendor>
 
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+                serviceImplementation="me.tmat.figmaboy.JcefPerformanceService"
+                preload="true"/>
         <toolWindow
-                id="My Window"
+                id="Figma Boy"
                 anchor="left"
                 icon="me.tmat.figmaboy.MyIcons.MyToolWindow"
                 secondary="false"
                 factoryClass="me.tmat.figmaboy.MyToolWindowFactory"
-
-        canCloseContents="true"
+                canCloseContents="true"
         />
     </extensions>
 
