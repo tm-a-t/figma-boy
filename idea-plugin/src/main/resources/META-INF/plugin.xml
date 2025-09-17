@@ -39,7 +39,7 @@
 
     <actions>
         <action id="FigmaBoy.Meow"
-                class="me.tmat.figmaboyplugin.mcp.McpDebugAction"
+                class="me.tmat.figmaboy.mcp.McpDebugAction"
                 text="Meow"
                 description="Meow"/>
     </actions>

@@ -1,4 +1,4 @@
-package me.tmat.figmaboyplugin.mcp
+package me.tmat.figmaboy.mcp
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.actionSystem.AnAction

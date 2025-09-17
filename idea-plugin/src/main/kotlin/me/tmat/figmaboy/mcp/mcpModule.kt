@@ -1,4 +1,4 @@
-package me.tmat.figmaboyplugin.mcp
+package me.tmat.figmaboy.mcp
 
 import com.intellij.openapi.diagnostic.Logger
 import io.ktor.serialization.kotlinx.json.*
@@ -12,7 +12,6 @@ import io.ktor.server.sse.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
 private val json = Json {

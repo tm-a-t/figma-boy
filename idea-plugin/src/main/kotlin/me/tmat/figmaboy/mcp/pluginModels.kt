@@ -1,4 +1,4 @@
-package me.tmat.figmaboyplugin.mcp
+package me.tmat.figmaboy.mcp
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement

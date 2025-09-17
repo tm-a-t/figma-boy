@@ -1,4 +1,4 @@
-package me.tmat.figmaboyplugin.mcp
+package me.tmat.figmaboy.mcp
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity

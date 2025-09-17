@@ -1,9 +1,7 @@
-package me.tmat.figmaboyplugin.mcp
+package me.tmat.figmaboy.mcp
 
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.diagnostic.thisLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import io.ktor.server.engine.*
