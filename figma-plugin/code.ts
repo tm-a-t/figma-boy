@@ -44,7 +44,7 @@ declare function generateCommandId(): string;
 // ──────────────────────────────────────────────────────────────────────────────
 // Error helpers
 // ──────────────────────────────────────────────────────────────────────────────
-export function buildError(code: number, message: string, data?: any) {
+function buildError(code: number, message: string, data?: any) {
   return { code, message, data };
 }
 
@@ -66,12 +66,12 @@ const ERR = {
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
-export type ColorRGBA = { r: number; g: number; b: number; a?: number };
+type ColorRGBA = { r: number; g: number; b: number; a?: number };
 
-export interface CreateRectangleParams {
+interface CreateRectangleParams {
   x?: number; y?: number; width?: number; height?: number; name?: string; parentId?: string;
 }
-export interface CreateFrameParams extends CreateRectangleParams {
+interface CreateFrameParams extends CreateRectangleParams {
   fillColor?: ColorRGBA;
   strokeColor?: ColorRGBA;
   strokeWeight?: number;
@@ -84,22 +84,22 @@ export interface CreateFrameParams extends CreateRectangleParams {
   layoutSizingVertical?: 'FIXED' | 'HUG' | 'FILL';
   itemSpacing?: number;
 }
-export interface CreateTextParams {
+interface CreateTextParams {
   x?: number; y?: number; text?: string; fontSize?: number; fontWeight?: number;
   fontColor?: ColorRGBA; name?: string; parentId?: string;
 }
 
-export interface ExportImageParams { nodeId: string; scale?: number; format?: 'PNG'|'JPG'|'SVG'|'PDF' };
-export interface MoveNodeParams { nodeId: string; x: number; y: number }
-export interface ResizeNodeParams { nodeId: string; width: number; height: number }
-export interface DeleteNodeParams { nodeId: string }
-export interface SetFillParams { nodeId: string; color: ColorRGBA }
-export interface SetStrokeParams { nodeId: string; color: ColorRGBA; weight?: number }
-export interface CornerRadiusParams { nodeId: string; radius: number; corners?: [boolean,boolean,boolean,boolean] }
-export interface TextContentParams { nodeId: string; text: string }
-export interface CloneNodeParams { nodeId: string; x?: number; y?: number }
-export interface ScanTextNodesParams { nodeId: string; useChunking?: boolean; chunkSize?: number; commandId?: string }
-export interface BatchTextReplacementParams { nodeId: string; text: Array<{ nodeId: string; text: string }>; commandId?: string }
+interface ExportImageParams { nodeId: string; scale?: number; format?: 'PNG'|'JPG'|'SVG'|'PDF' };
+interface MoveNodeParams { nodeId: string; x: number; y: number }
+interface ResizeNodeParams { nodeId: string; width: number; height: number }
+interface DeleteNodeParams { nodeId: string }
+interface SetFillParams { nodeId: string; color: ColorRGBA }
+interface SetStrokeParams { nodeId: string; color: ColorRGBA; weight?: number }
+interface CornerRadiusParams { nodeId: string; radius: number; corners?: [boolean,boolean,boolean,boolean] }
+interface TextContentParams { nodeId: string; text: string }
+interface CloneNodeParams { nodeId: string; x?: number; y?: number }
+interface ScanTextNodesParams { nodeId: string; useChunking?: boolean; chunkSize?: number; commandId?: string }
+interface BatchTextReplacementParams { nodeId: string; text: Array<{ nodeId: string; text: string }>; commandId?: string }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Utilities (ported from your JS)
@@ -109,7 +109,10 @@ function rgbaToHex(color: ColorRGBA) {
   const g = Math.round(color.g * 255);
   const b = Math.round(color.b * 255);
   const a = color.a !== undefined ? Math.round(color.a * 255) : 255;
-  const hex = (x: number) => x.toString(16).padStart(2, '0');
+  const hex = (x: number) => {
+    const s = x.toString(16);
+    return s.length < 2 ? '0' + s : s;
+  };
   if (a === 255) return `#${hex(r)}${hex(g)}${hex(b)}`;
   return `#${hex(r)}${hex(g)}${hex(b)}${hex(a)}`;
 }
@@ -222,7 +225,7 @@ const setCharacters = async (
           const key = `${charFont.family}::${charFont.style}`;
           fontHashTree[key] = (fontHashTree[key] ?? 0) + 1;
         }
-        const prevailed = Object.entries(fontHashTree).sort((a, b) => b[1] - a[1])[0];
+        const prevailed = Object.keys(fontHashTree).map((k) => [k, fontHashTree[k]] as [string, number]).sort((a, b) => b[1] - a[1])[0];
         const [family, style] = prevailed[0].split('::');
         const prevailedFont: FontName = { family, style };
         await figma.loadFontAsync(prevailedFont);
@@ -386,7 +389,7 @@ async function exportNodeAsJsonRestV1(node: ExportMixin): Promise<any> {
 // ──────────────────────────────────────────────────────────────────────────────
 // Handlers
 // ──────────────────────────────────────────────────────────────────────────────
-export async function handleGetDocumentInfo() {
+async function handleGetDocumentInfo() {
   try {
     await figma.currentPage.loadAsync();
     const page = figma.currentPage;
@@ -401,7 +404,7 @@ export async function handleGetDocumentInfo() {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleGetSelection() {
+async function handleGetSelection() {
   try {
     return {
       selectionCount: figma.currentPage.selection.length,
@@ -415,7 +418,7 @@ export async function handleGetSelection() {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleGetNodeInfo(args: { nodeId?: string }) {
+async function handleGetNodeInfo(args: { nodeId?: string }) {
   if (!args || typeof args.nodeId !== 'string') throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId: string }');
   try {
     const node = await figma.getNodeByIdAsync(args.nodeId);
@@ -425,7 +428,7 @@ export async function handleGetNodeInfo(args: { nodeId?: string }) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleGetNodesInfo(args: { nodeIds?: string[] }) {
+async function handleGetNodesInfo(args: { nodeIds?: string[] }) {
   if (!args || !Array.isArray(args.nodeIds)) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeIds: string[] }');
   try {
     const nodes = await Promise.all(args.nodeIds.map((id) => figma.getNodeByIdAsync(id)));
@@ -438,7 +441,7 @@ export async function handleGetNodesInfo(args: { nodeIds?: string[] }) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleGetReactions(args: { nodeIds?: string[] }) {
+async function handleGetReactions(args: { nodeIds?: string[] }) {
   if (!args || !Array.isArray(args.nodeIds)) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeIds: string[] }');
   try {
     const commandId = generateCommandId();
@@ -503,7 +506,7 @@ export async function handleGetReactions(args: { nodeIds?: string[] }) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleReadMyDesign() {
+async function handleReadMyDesign() {
   try {
     const nodes = await Promise.all(figma.currentPage.selection.map((n) => figma.getNodeByIdAsync(n.id)));
     const valid = nodes.filter((n): n is SceneNode => n !== null) as SceneNode[];
@@ -515,7 +518,7 @@ export async function handleReadMyDesign() {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleCreateRectangle(params: CreateRectangleParams = {}) {
+async function handleCreateRectangle(params: CreateRectangleParams = {}) {
   try {
     const { x = 0, y = 0, width = 100, height = 100, name = 'Rectangle', parentId } = params;
     const rect = figma.createRectangle();
@@ -530,7 +533,7 @@ export async function handleCreateRectangle(params: CreateRectangleParams = {}) 
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleCreateFrame(params: CreateFrameParams = {}) {
+async function handleCreateFrame(params: CreateFrameParams = {}) {
   try {
     const {
       x = 0, y = 0, width = 100, height = 100, name = 'Frame', parentId,
@@ -579,7 +582,7 @@ export async function handleCreateFrame(params: CreateFrameParams = {}) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleCreateText(params: CreateTextParams = {}) {
+async function handleCreateText(params: CreateTextParams = {}) {
   try {
     const { x = 0, y = 0, text = 'Text', fontSize = 14, fontWeight = 400, fontColor = { r: 0, g: 0, b: 0, a: 1 }, name = '', parentId } = params;
     const getFontStyle = (weight: number) => ({ 100: 'Thin', 200: 'Extra Light', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'Semi Bold', 700: 'Bold', 800: 'Extra Bold', 900: 'Black' } as const)[weight] ?? 'Regular';
@@ -602,7 +605,7 @@ export async function handleCreateText(params: CreateTextParams = {}) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleSetFillColor(params: SetFillParams) {
+async function handleSetFillColor(params: SetFillParams) {
   try {
     if (!params?.nodeId || !params.color) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId, color }');
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -614,7 +617,7 @@ export async function handleSetFillColor(params: SetFillParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleSetStrokeColor(params: SetStrokeParams) {
+async function handleSetStrokeColor(params: SetStrokeParams) {
   try {
     if (!params?.nodeId || !params.color) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId, color }');
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -627,7 +630,7 @@ export async function handleSetStrokeColor(params: SetStrokeParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleMoveNode(params: MoveNodeParams) {
+async function handleMoveNode(params: MoveNodeParams) {
   if (!params?.nodeId || params.x === undefined || params.y === undefined) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId, x, y }');
   try {
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -638,7 +641,7 @@ export async function handleMoveNode(params: MoveNodeParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleResizeNode(params: ResizeNodeParams) {
+async function handleResizeNode(params: ResizeNodeParams) {
   if (!params?.nodeId || params.width === undefined || params.height === undefined) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId, width, height }');
   try {
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -649,7 +652,7 @@ export async function handleResizeNode(params: ResizeNodeParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleDeleteNode(params: DeleteNodeParams) {
+async function handleDeleteNode(params: DeleteNodeParams) {
   if (!params?.nodeId) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId }');
   try {
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -660,7 +663,7 @@ export async function handleDeleteNode(params: DeleteNodeParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleGetStyles() {
+async function handleGetStyles() {
   try {
     const styles = {
       colors: await figma.getLocalPaintStylesAsync(),
@@ -677,7 +680,7 @@ export async function handleGetStyles() {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleGetLocalComponents() {
+async function handleGetLocalComponents() {
   try {
     await figma.loadAllPagesAsync();
     const components = figma.root.findAllWithCriteria({ types: ['COMPONENT'] });
@@ -685,7 +688,7 @@ export async function handleGetLocalComponents() {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleCreateComponentInstance(params: { componentKey?: string; x?: number; y?: number }) {
+async function handleCreateComponentInstance(params: { componentKey?: string; x?: number; y?: number }) {
   if (!params?.componentKey) throw buildError(ERR.INVALID_ARGS, 'Expected { componentKey }');
   try {
     const component = await figma.importComponentByKeyAsync(params.componentKey);
@@ -718,7 +721,7 @@ export async function handleCreateComponentInstance(params: { componentKey?: str
   }
 }
 
-export async function handleExportNodeAsImage(params: ExportImageParams) {
+async function handleExportNodeAsImage(params: ExportImageParams) {
   if (!params?.nodeId) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId }');
   try {
     const format = params.format ?? 'PNG';
@@ -733,7 +736,7 @@ export async function handleExportNodeAsImage(params: ExportImageParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleSetCornerRadius(params: CornerRadiusParams) {
+async function handleSetCornerRadius(params: CornerRadiusParams) {
   if (!params?.nodeId || params.radius === undefined) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId, radius, corners? }');
   try {
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -753,7 +756,7 @@ export async function handleSetCornerRadius(params: CornerRadiusParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleSetTextContent(params: TextContentParams) {
+async function handleSetTextContent(params: TextContentParams) {
   if (!params?.nodeId || params.text === undefined) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId, text }');
   try {
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -765,7 +768,7 @@ export async function handleSetTextContent(params: TextContentParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleCloneNode(params: CloneNodeParams) {
+async function handleCloneNode(params: CloneNodeParams) {
   if (!params?.nodeId) throw buildError(ERR.INVALID_ARGS, 'Expected { nodeId }');
   try {
     const node = await figma.getNodeByIdAsync(params.nodeId);
@@ -780,7 +783,7 @@ export async function handleCloneNode(params: CloneNodeParams) {
   } catch (e: any) { throw normalizeError(e); }
 }
 
-export async function handleScanTextNodes(params: ScanTextNodesParams) {
+async function handleScanTextNodes(params: ScanTextNodesParams) {
   try {
     const { nodeId, useChunking = true, chunkSize = 10 } = params;
     const commandId = params.commandId ?? generateCommandId();
@@ -876,7 +879,7 @@ async function findTextNodes(node: any, parentPath: string[] = [], depth = 0, te
   if ('children' in node) for (const child of (node as any).children) await findTextNodes(child, nodePath, depth + 1, textNodes);
 }
 
-export async function handleSetMultipleTextContents(params: BatchTextReplacementParams) {
+async function handleSetMultipleTextContents(params: BatchTextReplacementParams) {
   try {
     const { nodeId, text } = params;
     const commandId = params.commandId ?? generateCommandId();

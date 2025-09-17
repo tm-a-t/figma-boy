@@ -84,13 +84,8 @@
           try { data = JSON.parse(ev.data); } catch {}
           if (!data || typeof data !== 'object') return;
 
-          if (data.type === 'command') {
-            // forward to code.ts
-            parent.postMessage({ pluginMessage: data }, '*');
-            log('Command: ' + data.name);
-          } else {
-            log('Unknown message from server: ' + ev.data);
-          }
+          parent.postMessage({ pluginMessage: data }, '*');
+          log(`Command: ${data.name}`);
         };
       }
 
@@ -164,6 +159,7 @@
 
       const _prevOnMessage = window.onmessage;
       window.onmessage = (event) => {
+        // console.log('onmessage', event);
         const msg = event.data && event.data.pluginMessage;
         if (!msg) return;
 

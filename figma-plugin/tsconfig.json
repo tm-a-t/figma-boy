@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES2015",
     "module": "ESNext",
     "types": ["@figma/plugin-typings"],
-    "lib": ["ES2018"],
+    "lib": ["ES2015"],
     "strict": true
   },
   "include": ["**/*.ts"],
