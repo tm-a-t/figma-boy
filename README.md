@@ -22,13 +22,13 @@ We will simplify this process and put everything in one place (IntelliJ, of cour
     - TODO
 
 ## How to run
-- Idea Plugin (Figma boy plugin)
+- Idea Plugin
 
     From root:
     ```bash
     ./gradlew :idea-plugin:runIde 
     ```
-  or alternatively by alias:
+    or alternatively by alias:
     ```bash
     ./gradlew runIde 
     ```
