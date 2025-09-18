@@ -1,37 +1,85 @@
-## Problem 
+## How to run
 
-Developing UI is a cycle: design, code, iterate. Even if you vibecode, you may need design prototypes to edit them visually and have a source of truth for AI.
+1. Go to `figma-plugin` directory and run the following commands
 
-In 2025, it probably looks like this: open Figma, use AI tools in Figma to design, get the pictures, show them to AI in the IDE, ask to implement, and retry until the result looks good enough.
+```shell
+npm install
+npx tsc -p . 
+```
+
+2. Run Figma Desktop app
+3. Select `Plugins > Development > Open > Import plugin from manifest...` and choose `figma-mcp` directory
+4. Open any Figma project and run the Figma Boy plugin
+
+5. Run an IDEA instance with the plugin with
+
+```shell
+./gradlew runIde
+```
+
+6. Add Figma Boy MCP server in the Settings -> Tools -> Junie -> MCP Settings by pasting the config below
+
+```json
+{
+  "mcpServers": {
+    "figma-boy": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://127.0.0.1:4114/sse"
+      ]
+    }
+  }
+}
+```
+
+7. The integration should work now! You can open the Figma panel (the Google authentication won't work for now) and
+   start using Junie to build your UI
+
+## Problem
+
+Developing UI is a cycle: design, code, iterate. Even if you vibecode, you may need design prototypes to edit them
+visually and have a source of truth for AI.
+
+In 2025, it probably looks like this: open Figma, use AI tools in Figma to design, get the pictures, show them to AI in
+the IDE, ask to implement, and retry until the result looks good enough.
 
 We will simplify this process and put everything in one place (IntelliJ, of course).
 
-## Features 
+## Features
 
 1) Junie edits Figma prototypes
-  - Tool calling using the recently released Figma MCP
+
+- Tool calling using the recently released Figma MCP
+
 2) User views and tweaks design from IDE
-  - A Figma pane for IntelliJ with the UI tailored to our use case
+
+- A Figma pane for IntelliJ with the UI tailored to our use case
+
 3) Junie codes and compares UI with Figma prototypes
-  - Providing Junie with design parameters and pictures, tool calling to verify the results
+
+- Providing Junie with design parameters and pictures, tool calling to verify the results
 
 ## Project structure
- - idea-plugin
-    -  Plugin, implemented as a view of a browser, allowing to log into Figma account and interact with your projects directly from Intellij
- - Figma MCP Server
+
+- idea-plugin
+    - Plugin, implemented as a view of a browser, allowing to log into Figma account and interact with your projects
+      directly from Intellij
+- Figma MCP Server
     - TODO
 
 ## How to run
+
 - Idea Plugin
 
-    From root:
+  From root:
     ```bash
     ./gradlew :idea-plugin:runIde 
     ```
-    or alternatively by alias:
+  or alternatively by alias:
     ```bash
     ./gradlew runIde 
     ```
 - FIgma MCP server
-  
-    TODO
+
+  TODO
