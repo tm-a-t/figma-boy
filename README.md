@@ -1,3 +1,12 @@
+# Figma Boy: Figma integration with IntelliJ & Junie
+
+- Open Figma in an IntelliJ panel to explore and edit the design right away.
+- Ask Junie to edit your prototypes.
+- Ask Junie to implement the prototypes in your codebase.
+
+> [!NOTE]
+> The setup takes more steps until we publish the plugins. Technically, Figma Boy is an IntelliJ plugin and a Figma plugin that work together. When we publish both plugins to the marketplaces, the setup will be as easy as finding them online.
+
 ## How to run
 
 1. Go to `figma-plugin` directory and run the following commands
@@ -46,40 +55,9 @@ the IDE, ask to implement, and retry until the result looks good enough.
 
 We will simplify this process and put everything in one place (IntelliJ, of course).
 
-## Features
-
-1) Junie edits Figma prototypes
-
-- Tool calling using the recently released Figma MCP
-
-2) User views and tweaks design from IDE
-
-- A Figma pane for IntelliJ with the UI tailored to our use case
-
-3) Junie codes and compares UI with Figma prototypes
-
-- Providing Junie with design parameters and pictures, tool calling to verify the results
-
-## Project structure
 
 - idea-plugin
     - Plugin, implemented as a view of a browser, allowing to log into Figma account and interact with your projects
       directly from Intellij
 - Figma MCP Server
     - TODO
-
-## How to run
-
-- Idea Plugin
-
-  From root:
-    ```bash
-    ./gradlew :idea-plugin:runIde 
-    ```
-  or alternatively by alias:
-    ```bash
-    ./gradlew runIde 
-    ```
-- FIgma MCP server
-
-  TODO
