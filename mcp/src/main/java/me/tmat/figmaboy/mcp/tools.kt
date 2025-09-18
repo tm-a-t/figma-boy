@@ -532,14 +532,14 @@ fun registerTools(hub: PluginHub) =
             val figmaPluginResponse = hub.callToolThroughPlugin(tool.name, request.arguments)
             if (figmaPluginResponse.ok) {
                 CallToolResult(
-                    listOf(),  // todo short text response
+                    listOf(TextContent("Executed the command. Result: ${json.encodeToString(figmaPluginResponse.result)}")),
                     buildJsonObject {
                         put("result", figmaPluginResponse.result ?: JsonNull)
                     }
                 )
             } else {
                 CallToolResult(
-                    listOf(),
+                    listOf(TextContent("Couldn't execute the command")),
                     isError = true,
                 )
             }
