@@ -7,16 +7,15 @@
 </div>
 <br>
 
-- Open Figma in an IntelliJ panel to explore and edit the design in the IDE.
-- Ask Junie to edit your prototypes.
-- Ask Junie to implement the prototypes in your codebase.
+- Explore and edit your design files in an IntelliJ panel
+- Ask Junie to edit your prototypes
+- Ask Junie to implement the prototypes in your codebase
 
 https://github.com/user-attachments/assets/4f650d7f-1ae9-45fe-944f-f9a81859218b
 
-**Please star this project and show support if you want us to continue Figma Boy.** We created this project as an experiment during the JetBrains Hackathon 2025—and we are open to actively working on it if there is a request from the community.
+✨ **This is a hackathon project—please star it and show support if you want us to continue our work.** We are open to actively working on Figma Boy if there is a request from the community.
 
-> [!NOTE]
-> The setup takes more steps until we publish the plugins. Figma Boy consists of an IntelliJ plugin and a Figma plugin that work together—when we publish both plugins, the setup will be as easy as saving them on the marketplaces.
+✨ **You need to build Figma Boy locally for now.** The project consists of an IntelliJ plugin and a Figma plugin that work together. When we publish both plugins, the setup will be as easy as saving them on the marketplaces.
 
 ## Run dev version
 
