@@ -13,11 +13,15 @@
 
 https://github.com/user-attachments/assets/4f650d7f-1ae9-45fe-944f-f9a81859218b
 
+Figma Boy is an alternative to Figma’s official [Dev Mode MCP](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Dev-Mode-MCP-Server) that lets agents generate code from designs. We aim for more capabilities and tighter integration with Junie & IntelliJ.
+
+## How to use
+
+✨ **For now, you need to build Figma Boy locally (see the instructions below).** The project consists of an IntelliJ plugin and a Figma plugin that work together. When we publish both plugins, the setup will be as easy as saving them on the marketplaces.
+
 ✨ **This is a hackathon project—please star it and show support if you want us to continue our work.** We are open to actively working on Figma Boy if there is a request from the community.
 
-✨ **You need to build Figma Boy locally for now.** The project consists of an IntelliJ plugin and a Figma plugin that work together. When we publish both plugins, the setup will be as easy as saving them on the marketplaces.
-
-## Run dev version
+## Running dev version
 
 1. Run the Figma plugin
     1. Go to `figma-plugin` directory and run the following commands:
@@ -52,3 +56,5 @@ https://github.com/user-attachments/assets/4f650d7f-1ae9-45fe-944f-f9a81859218b
     ```
 
 4. The integration should work now! You can open the Figma panel (the Google authentication won't work for now) and ask Junie to build your UI
+
+
