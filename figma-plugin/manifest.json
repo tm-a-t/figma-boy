@@ -1,11 +1,10 @@
 {
   "name": "Figma Boy",
-  "id": "figma-boy-intellij",
+  "id": "1554845251094002332",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
   "capabilities": [],
-  "enableProposedApi": true,
   "enablePrivatePluginApi": true,
   "documentAccess": "dynamic-page",
   "editorType": [
@@ -18,6 +17,6 @@
       "http://localhost:4114",
       "ws://localhost:4114"
     ],
-    "reasoning": "Connects to an MCP server by the IntelliJ plugin"
+    "reasoning": "This is connection to the IntelliJ plugin"
   }
 }
